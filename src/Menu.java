@@ -7,12 +7,14 @@ import java.util.Objects;
 
 public class Menu extends JFrame implements ActionListener{
     private JButton start;
-    private JLabel name_label,level_label;
+    private JLabel name_label,level_label,timer_label;
     private JTextField name;
     private JComboBox level;
     private String player_name;
     private Game game;
     private int lev;
+    private JCheckBox timer;
+    private boolean count_time;
     public Menu(){
         super("Quiz");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,6 +52,14 @@ public class Menu extends JFrame implements ActionListener{
         c.gridy++;
         add(level,c);
 
+        c.gridy++;
+        timer_label=new JLabel("Gra na czas");
+        add(timer_label,c);
+        c.gridy++;
+        timer=new JCheckBox();
+        timer.addActionListener(this);
+        add(timer,c);
+
         start = new JButton("Start");
         start.addActionListener(this);
         c.gridy++;
@@ -58,6 +68,7 @@ public class Menu extends JFrame implements ActionListener{
         pack();
 
         lev=0;
+        count_time=false;
     }
 
     @Override
@@ -76,12 +87,22 @@ public class Menu extends JFrame implements ActionListener{
             }
             else{
                 try {
-                    game = new Game(player_name,lev);
+                    game = new Game(player_name,lev,this,count_time);
                 } catch (FileNotFoundException e1) {
                     e1.printStackTrace();
                 }
-            }
                 this.setVisible(false);
+            }
+
+            }
+            if(source==timer){
+                if(timer.isSelected()){
+                    count_time=true;
+                    System.out.println("no i elo");
+                }
+                else{
+                    count_time=false;
+                }
             }
         }
     }

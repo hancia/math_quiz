@@ -3,24 +3,31 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Scanner;
 
 public class Game extends JFrame implements ActionListener {
     private String player_name,bestname;
-    private int level, good_result,questions,points,bestscore;
+    private int level, good_result,questions,points,bestscore,z,startclick;
     private JButton start, next,highscores, clear_highscores;
     private JLabel operation;
     private JTextField result;
     private Random generator;
-    private JLabel point_bar;
+    private JLabel point_bar,time;
     private PointsPanel Panel;
     private Score[] scores;
-    public Game(String name, int lev) throws FileNotFoundException {
+    private Menu main_menu;
+    private Component parentComponent;
+    private boolean run,count_time;
+    public Game(String name, int lev,Menu mainm,boolean time_t) throws FileNotFoundException {
         super("Quiz");
         player_name = name;
         level = lev;
+        main_menu=mainm;
+        count_time=time_t;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
@@ -61,6 +68,12 @@ public class Game extends JFrame implements ActionListener {
         point_bar = new JLabel("0/0/0");
         add(point_bar,c);
 
+
+        time = new JLabel("0");
+        time.setVisible(count_time);
+        c.gridy++;
+        add(time,c);
+
         c.gridy++;
         highscores = new JButton("Highscores");
         highscores.addActionListener(this);
@@ -74,7 +87,6 @@ public class Game extends JFrame implements ActionListener {
         c.gridy++;
         c.fill=GridBagConstraints.HORIZONTAL;
         Panel = new PointsPanel();
-        //Panel.setVisible(false);
         add(Panel,c);
 
         pack();
@@ -82,6 +94,12 @@ public class Game extends JFrame implements ActionListener {
         generator = new Random();
         questions=0;
         points=0;
+        parentComponent=super.rootPane;
+
+
+        run=true;
+        z=0;
+        startclick=0;
 
         scores = new Score[4];
         for(int i=0; i<4; i++) scores[i]=new Score("None",0);
@@ -222,14 +240,50 @@ public class Game extends JFrame implements ActionListener {
         }
         zapis.close();
     }
+    public void BackToMenu(){
+        this.dispose();
+        main_menu.setVisible(true);
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
         if (source == start) {
+            if(count_time) {
+                Instant t1 = Instant.now();
+                new Thread(new Runnable() {
+                    public void run() {
+                        run = true;
+                        z = 0;
+                        Thread thisThread = java.lang.Thread.currentThread();
+                        while (run) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    Instant t2 = Instant.now();
+                                    time.setText(Integer.toString((int) Duration.between(t1, t2).toSeconds()));
+                                }
+                            });
+                            try {
+                                java.lang.Thread.sleep(1000);
+                            } catch (Exception e) {
+                            }
+                            z++;
+                            if (z == 60) {
+                                JOptionPane.showMessageDialog(parentComponent, "Koniec czasu :/");
+                                run = false;
+                                BackToMenu();
+                                thisThread.interrupt();
+                            }
+                            if (thisThread.isInterrupted()) return;
+                        }
+                    }
+                }).start();
+            }
+
             questions=25;
             points=0;
             get_operation();
             point_bar.setText(Integer.toString(points)+"/"+Integer.toString(26-questions)+"/25");
+            start.setEnabled(false);
         }
         if(source == next){
             String temp = result.getText();
@@ -266,6 +320,7 @@ public class Game extends JFrame implements ActionListener {
                     clear_file();
                     write_best();
                 }
+                BackToMenu();
             }
         }
         if(source==highscores){
