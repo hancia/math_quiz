@@ -1,0 +1,4 @@
+Level: 0 Imię: aa Punkty: 1
+Level: 1 Imię: None Punkty: 0
+Level: 2 Imię: None Punkty: 0
+Level: 3 Imię: None Punkty: 0
